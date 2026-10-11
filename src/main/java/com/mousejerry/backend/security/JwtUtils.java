@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 
 @Slf4j
@@ -28,16 +29,16 @@ public class JwtUtils {
     }
 
     public String generateToken(User user) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        Instant now = Instant.now();
+        Instant expiryDate = now.plusMillis(jwtExpirationMs);
 
         return Jwts.builder()
                 .subject(user.getUsername())
                 .claim("userId", user.getId())
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole().name())
-                .issuedAt(now)
-                .expiration(expiryDate)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiryDate))
                 .signWith(getSigningKey())
                 .compact();
     }
