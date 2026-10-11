@@ -17,10 +17,21 @@ class Se327MouseJerryBackendApplicationTests {
     @Autowired(required = false)
     private ApplicationContext applicationContext;
 
+    @Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     @Test
     void contextLoads() {
         assertNotNull(applicationContext, "Application context should load successfully");
     }
 
+    @Test
+    void springSessionTableExists() {
+        if (jdbcTemplate != null) {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM spring_session", Integer.class);
+            assertNotNull(count, "Spring session count should not be null");
+        }
+    }
 }
 
