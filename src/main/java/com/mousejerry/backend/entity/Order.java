@@ -36,7 +36,7 @@ public class Order {
 
     @Column(name = "purchase_date")
     @Builder.Default
-    private LocalDateTime purchaseDate = LocalDateTime.now();
+    private LocalDateTime purchaseDate = LocalDateTime.now(java.time.ZoneOffset.UTC);
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

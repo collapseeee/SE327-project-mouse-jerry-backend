@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
                 .email(registerRequest.getEmail())
                 .passwordHash(passwordEncoder.encode(registerRequest.getPassword()))
                 .role(Role.ROLE_CUSTOMER)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(java.time.ZoneOffset.UTC))
                 .build();
 
         return userDao.save(user);
