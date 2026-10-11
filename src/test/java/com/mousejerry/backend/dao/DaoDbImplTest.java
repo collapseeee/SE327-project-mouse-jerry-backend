@@ -137,4 +137,62 @@ class DaoDbImplTest {
         verify(gameRepository).findByIsHighlightTrue();
         verify(gameRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class));
     }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void testBuildSpecificationWithFilters() {
+        org.springframework.data.jpa.domain.Specification<com.mousejerry.backend.entity.Game> spec =
+                gameDao.buildSpecification("Fighting", "drone");
+        assertNotNull(spec);
+
+        jakarta.persistence.criteria.Root<com.mousejerry.backend.entity.Game> root = mock(jakarta.persistence.criteria.Root.class);
+        jakarta.persistence.criteria.CriteriaQuery query = mock(jakarta.persistence.criteria.CriteriaQuery.class);
+        jakarta.persistence.criteria.CriteriaBuilder cb = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+
+        jakarta.persistence.criteria.Join primaryCatJoin = mock(jakarta.persistence.criteria.Join.class);
+        jakarta.persistence.criteria.Join catJoin = mock(jakarta.persistence.criteria.Join.class);
+        jakarta.persistence.criteria.Join searchCatJoin = mock(jakarta.persistence.criteria.Join.class);
+
+        when(root.join("primaryCategory", jakarta.persistence.criteria.JoinType.LEFT)).thenReturn(primaryCatJoin);
+        when(root.join("categories", jakarta.persistence.criteria.JoinType.LEFT)).thenReturn(catJoin).thenReturn(searchCatJoin);
+
+        jakarta.persistence.criteria.Path namePath = mock(jakarta.persistence.criteria.Path.class);
+        when(primaryCatJoin.get("name")).thenReturn(namePath);
+        when(primaryCatJoin.get("slug")).thenReturn(namePath);
+        when(catJoin.get("name")).thenReturn(namePath);
+        when(catJoin.get("slug")).thenReturn(namePath);
+        when(searchCatJoin.get("name")).thenReturn(namePath);
+        when(root.get("name")).thenReturn(namePath);
+
+        jakarta.persistence.criteria.Expression lowerExpr = mock(jakarta.persistence.criteria.Expression.class);
+        when(cb.lower(any())).thenReturn(lowerExpr);
+
+        jakarta.persistence.criteria.Predicate pred = mock(jakarta.persistence.criteria.Predicate.class);
+        when(cb.equal(any(), anyString())).thenReturn(pred);
+        when(cb.like(any(), anyString())).thenReturn(pred);
+        when(cb.or(any(), any(), any(), any())).thenReturn(pred);
+        when(cb.or(any(), any())).thenReturn(pred);
+        when(cb.and(any(jakarta.persistence.criteria.Predicate[].class))).thenReturn(pred);
+
+        jakarta.persistence.criteria.Predicate result = spec.toPredicate(root, query, cb);
+        assertNotNull(result);
+        verify(query).distinct(true);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void testBuildSpecificationEmptyFilters() {
+        org.springframework.data.jpa.domain.Specification<com.mousejerry.backend.entity.Game> spec =
+                gameDao.buildSpecification(null, "");
+        assertNotNull(spec);
+
+        jakarta.persistence.criteria.Root<com.mousejerry.backend.entity.Game> root = mock(jakarta.persistence.criteria.Root.class);
+        jakarta.persistence.criteria.CriteriaBuilder cb = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+
+        jakarta.persistence.criteria.Predicate pred = mock(jakarta.persistence.criteria.Predicate.class);
+        when(cb.and(any(jakarta.persistence.criteria.Predicate[].class))).thenReturn(pred);
+
+        jakarta.persistence.criteria.Predicate result = spec.toPredicate(root, null, cb);
+        assertNotNull(result);
+    }
 }

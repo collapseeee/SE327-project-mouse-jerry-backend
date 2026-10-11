@@ -27,7 +27,12 @@ public class GameDaoDbImpl implements GameDao {
 
     @Override
     public Page<Game> findGames(String category, String search, Pageable pageable) {
-        Specification<Game> spec = (root, query, cb) -> {
+        Specification<Game> spec = buildSpecification(category, search);
+        return gameRepository.findAll(spec, pageable);
+    }
+
+    public Specification<Game> buildSpecification(String category, String search) {
+        return (root, query, cb) -> {
             if (query != null) {
                 query.distinct(true);
             }
@@ -58,8 +63,6 @@ public class GameDaoDbImpl implements GameDao {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-
-        return gameRepository.findAll(spec, pageable);
     }
 
     @Override
