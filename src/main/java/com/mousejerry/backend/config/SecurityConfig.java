@@ -56,9 +56,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    @SuppressWarnings({"java:S4502", "java:S112"})
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+    @SuppressWarnings("java:S4502")
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        try {
+            http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
@@ -75,7 +76,10 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
+            return http.build();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to configure SecurityFilterChain", e);
+        }
     }
 
     @Bean
