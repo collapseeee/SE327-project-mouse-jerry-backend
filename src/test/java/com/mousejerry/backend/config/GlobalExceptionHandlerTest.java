@@ -37,6 +37,6 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<Map<String, String>> response = exceptionHandler.handleGenericException(ex);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Server error", response.getBody().get("error"));
+        assertEquals("An unexpected error occurred. Please try again later.", response.getBody().get("error"));
     }
 }
