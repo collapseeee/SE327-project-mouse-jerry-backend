@@ -100,7 +100,13 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
      ```
    - Create the Pull Request targeting `development` with the `agent` label using GitHub CLI (`gh`):
      ```bash
-     gh pr create --base development --head feature/<short-descriptive-kebab-name> --label "agent" --title "feat(<scope>): <Title>" --body-file pr_body.md
+     branch=$(git branch --show-current)
+     case "$branch" in
+       feature/*) pr_type=feat ;;
+       fix/*)     pr_type=fix ;;
+       *)         echo "Expected a feature/* or fix/* branch" >&2; exit 1 ;;
+     esac
+     gh pr create --base development --head "$branch" --label "agent" --title "${pr_type}(<scope>): <Title>" --body-file pr_body.md
      rm pr_body.md
      ```
      *(If `gh` CLI is not installed or authenticated, provide the direct GitHub PR URL output by git push)*
