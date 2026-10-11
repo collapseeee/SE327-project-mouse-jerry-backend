@@ -52,7 +52,7 @@ class SecurityConfigTest {
         CorsConfiguration config = source.getCorsConfiguration(request);
 
         assertNotNull(config);
-        assertTrue(config.getAllowedOriginPatterns().contains("*"));
+        assertTrue(config.getAllowedOrigins().contains("http://localhost:3000"));
         assertTrue(config.getAllowCredentials());
     }
 }
