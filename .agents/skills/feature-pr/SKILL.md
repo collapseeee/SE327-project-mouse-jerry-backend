@@ -42,29 +42,68 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
    - Flyway migrations and Spring Security filters compile cleanly.
    - If any test fails, resolve the issue immediately before proceeding.
 
-### Step 3: Conventional Commit & Push
-1. Stage modified and newly created files:
+### Step 3: Atomic Commits & Remote Push (DevOps Principle)
+1. **Enforce Atomic Commits (One Purpose Per Commit)**:
+   - **Never bulk commit unrelated files together (`git add .`)**. Stage and commit files by individual concern:
+     - **Entity / Migration / DTO Layer**:
+       ```bash
+       git add src/main/java/com/mousejerry/backend/entity/* src/main/java/com/mousejerry/backend/dto/*
+       git commit -m "feat(<scope>): implement domain entity and DTO definitions" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+       ```
+     - **DAO & Repository Layer**:
+       ```bash
+       git add src/main/java/com/mousejerry/backend/repository/* src/main/java/com/mousejerry/backend/dao/*
+       git commit -m "feat(<scope>): implement DAO layer with @Profile(\"db\") and repositories" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+       ```
+     - **Service & Controller Layer**:
+       ```bash
+       git add src/main/java/com/mousejerry/backend/service/* src/main/java/com/mousejerry/backend/controller/*
+       git commit -m "feat(<scope>): implement service logic and REST controller endpoints" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+       ```
+     - **Unit & Integration Tests**:
+       ```bash
+       git add src/test/java/com/mousejerry/backend/*
+       git commit -m "test(<scope>): add unit tests and Testcontainers integration tests" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+       ```
+     - **Bug Fixes**:
+       ```bash
+       git add <fixed-file>
+       git commit -m "fix(<scope>): <description of bugfix>" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+       ```
+2. **Push the Branch**:
    ```bash
-   git add .
-   ```
-2. Commit changes using Conventional Commits format with the Antigravity Agent Co-authored-by trailer:
-   ```bash
-   git commit -m "feat(<scope>): <short description of what was built>" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
-   # Examples:
-   # git commit -m "feat(game): add game query and category filter endpoints" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
-   # git commit -m "feat(order): implement key generation and stock deduction transaction" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
-   ```
-3. Push the feature branch to GitHub remote:
-   ```bash
-   git push -u origin feature/<short-descriptive-kebab-name>
+   git push -u origin <branch-name>
    ```
 
-### Step 4: Pull Request Creation
-1. Create a Pull Request targeting `development` with the `agent` label using the GitHub CLI (`gh`):
-   ```bash
-   gh pr create --base development --head feature/<short-descriptive-kebab-name> --label "agent" --title "feat(<scope>): <Title>" --body-file pr_body.md
-   ```
-   *(If `gh` CLI is not installed or authenticated, provide the direct GitHub PR URL output by git push)*
+### Step 4: Pull Request Handling (No Duplicate PRs)
+1. **If updating an EXISTING open PR**:
+   - Pushing the branch in Step 3 **automatically updates the existing PR on GitHub**.
+   - **DO NOT run `gh pr create`**.
+   - Output the existing PR link confirming new commits were pushed.
+2. **If creating a NEW Pull Request**:
+   - Write the formatted markdown description to a temporary file `pr_body.md`:
+     ```bash
+     cat << 'EOF' > pr_body.md
+     ## 📌 Summary of Changes
+     - Detailed description of backend APIs, entities, or business logic implemented.
+
+     ## 🧪 Test Coverage & Metrics
+     - Tests run via `./mvnw clean test`.
+     - All unit and integration test assertions passed.
+
+     ## ✅ Review Checklist
+     - [ ] Follows strict 5-tier architecture (Controller -> Service -> DAO -> Repository).
+     - [ ] DTOs mapped via MapStruct (never return raw entities).
+     - [ ] Unit & branch tests pass cleanly.
+     - [ ] Ready to merge into `development`.
+     EOF
+     ```
+   - Create the Pull Request targeting `development` with the `agent` label using GitHub CLI (`gh`):
+     ```bash
+     gh pr create --base development --head feature/<short-descriptive-kebab-name> --label "agent" --title "feat(<scope>): <Title>" --body-file pr_body.md
+     rm pr_body.md
+     ```
+     *(If `gh` CLI is not installed or authenticated, provide the direct GitHub PR URL output by git push)*
 2. The PR description body MUST follow this template:
    ```markdown
    ## 📌 Summary of Changes
