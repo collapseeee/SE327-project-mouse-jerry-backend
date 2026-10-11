@@ -187,6 +187,25 @@ class LabMapperTest {
     }
 
     @Test
+    void testToGameDTO_WithNullAssociations() {
+        com.mousejerry.backend.entity.Game game = com.mousejerry.backend.entity.Game.builder()
+                .id("minimal-game")
+                .name("Minimal Game")
+                .price(BigDecimal.valueOf(100))
+                .primaryCategory(null)
+                .categories(null)
+                .screenshots(null)
+                .build();
+
+        com.mousejerry.backend.dto.GameDTO dto = labMapper.toGameDTO(game);
+        assertNotNull(dto);
+        assertEquals("minimal-game", dto.getId());
+        assertNull(dto.getCategory());
+        assertTrue(dto.getCategories().isEmpty());
+        assertTrue(dto.getScreenshots().isEmpty());
+    }
+
+    @Test
     void testToGameDTOList() {
         assertNull(labMapper.toGameDTOList(null));
 

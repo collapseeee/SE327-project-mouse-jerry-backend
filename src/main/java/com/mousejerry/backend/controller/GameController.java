@@ -20,6 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GameController {
 
+    public static final int MAX_PAGE_SIZE = 100;
+
     private final GameService gameService;
     private final LabMapper labMapper;
 
@@ -33,7 +35,7 @@ public class GameController {
             @RequestParam(defaultValue = "asc") String direction
     ) {
         int pageNumber = Math.max(page - 1, 0);
-        int pageSize = Math.max(size, 1);
+        int pageSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortDir, sort));
 

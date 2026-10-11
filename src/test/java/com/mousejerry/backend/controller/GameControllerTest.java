@@ -17,12 +17,16 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import org.mockito.ArgumentCaptor;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -68,6 +72,36 @@ class GameControllerTest {
                 .andExpect(header().string("X-Total-Count", "1"))
                 .andExpect(jsonPath("$[0].id").value("clone-drone"))
                 .andExpect(jsonPath("$[0].name").value("Clone Drone"));
+    }
+
+    @Test
+    void getGames_WithPageSizeExceedingMax_ClampsToMaxPageSize() throws Exception {
+        when(gameService.getGames(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
+        when(labMapper.toGameDTOList(any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/games")
+                        .param("size", "500")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(gameService).getGames(any(), any(), pageableCaptor.capture());
+        assertEquals(GameController.MAX_PAGE_SIZE, pageableCaptor.getValue().getPageSize());
+    }
+
+    @Test
+    void getGames_WithNegativePageSize_ClampsToOne() throws Exception {
+        when(gameService.getGames(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
+        when(labMapper.toGameDTOList(any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/games")
+                        .param("size", "-5")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(gameService).getGames(any(), any(), pageableCaptor.capture());
+        assertEquals(1, pageableCaptor.getValue().getPageSize());
     }
 
     @Test
