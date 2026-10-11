@@ -47,8 +47,8 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
    - **Never bulk commit unrelated files together (`git add .`)**. Stage and commit files by individual concern:
      - **Entity / Migration / DTO Layer**:
        ```bash
-       git add src/main/java/com/mousejerry/backend/entity/* src/main/java/com/mousejerry/backend/dto/*
-       git commit -m "feat(<scope>): implement domain entity and DTO definitions" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+       git add src/main/resources/db/migration/* src/main/java/com/mousejerry/backend/entity/* src/main/java/com/mousejerry/backend/dto/*
+       git commit -m "feat(<scope>): implement domain entity, DTO definitions, and Flyway migrations" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
        ```
      - **DAO & Repository Layer**:
        ```bash
