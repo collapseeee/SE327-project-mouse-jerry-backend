@@ -27,11 +27,23 @@ class DaoDbImplTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private com.mousejerry.backend.repository.CategoryRepository categoryRepository;
+
+    @Mock
+    private com.mousejerry.backend.repository.GameRepository gameRepository;
+
     @InjectMocks
     private UserDaoDbImpl userDao;
 
     @InjectMocks
     private OrderDaoDbImpl orderDao;
+
+    @InjectMocks
+    private com.mousejerry.backend.dao.impl.CategoryDaoDbImpl categoryDao;
+
+    @InjectMocks
+    private com.mousejerry.backend.dao.impl.GameDaoDbImpl gameDao;
 
     @Test
     void testUserDaoDelegation() {
@@ -77,5 +89,52 @@ class DaoDbImplTest {
         verify(orderRepository).findById(2L);
         verify(orderRepository).findByUserIdOrderByPurchaseDateDesc(1L);
         verify(orderRepository).findByOrderNumber("ORD-2");
+    }
+
+    @Test
+    void testCategoryDaoDelegation() {
+        com.mousejerry.backend.entity.Category cat = com.mousejerry.backend.entity.Category.builder().id(1L).name("Fighting").slug("fighting").build();
+
+        when(categoryRepository.save(cat)).thenReturn(cat);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
+        when(categoryRepository.findByNameIgnoreCase("Fighting")).thenReturn(Optional.of(cat));
+        when(categoryRepository.findBySlugIgnoreCase("fighting")).thenReturn(Optional.of(cat));
+        when(categoryRepository.findByIsVisibleTrueOrderByNameAsc()).thenReturn(List.of(cat));
+        when(categoryRepository.findAll()).thenReturn(List.of(cat));
+
+        assertSame(cat, categoryDao.save(cat));
+        assertTrue(categoryDao.findById(1L).isPresent());
+        assertTrue(categoryDao.findByName("Fighting").isPresent());
+        assertTrue(categoryDao.findBySlug("fighting").isPresent());
+        assertEquals(1, categoryDao.findAllVisible().size());
+        assertEquals(1, categoryDao.findAll().size());
+
+        verify(categoryRepository).save(cat);
+        verify(categoryRepository).findById(1L);
+        verify(categoryRepository).findByNameIgnoreCase("Fighting");
+        verify(categoryRepository).findBySlugIgnoreCase("fighting");
+        verify(categoryRepository).findByIsVisibleTrueOrderByNameAsc();
+        verify(categoryRepository).findAll();
+    }
+
+    @Test
+    void testGameDaoDelegation() {
+        com.mousejerry.backend.entity.Game game = com.mousejerry.backend.entity.Game.builder().id("clone-drone").name("Clone Drone").build();
+        org.springframework.data.domain.Page<com.mousejerry.backend.entity.Game> page = new org.springframework.data.domain.PageImpl<>(List.of(game));
+
+        when(gameRepository.save(game)).thenReturn(game);
+        when(gameRepository.findById("clone-drone")).thenReturn(Optional.of(game));
+        when(gameRepository.findByIsHighlightTrue()).thenReturn(List.of(game));
+        when(gameRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
+
+        assertSame(game, gameDao.save(game));
+        assertTrue(gameDao.findById("clone-drone").isPresent());
+        assertEquals(1, gameDao.findHighlights().size());
+        assertEquals(1, gameDao.findGames("Fighting", "drone", org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
+
+        verify(gameRepository).save(game);
+        verify(gameRepository).findById("clone-drone");
+        verify(gameRepository).findByIsHighlightTrue();
+        verify(gameRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class));
     }
 }
