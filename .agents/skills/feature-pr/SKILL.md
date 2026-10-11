@@ -47,12 +47,12 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
    ```bash
    git add .
    ```
-2. Commit changes using Conventional Commits format:
+2. Commit changes using Conventional Commits format with the Antigravity Agent Co-authored-by trailer:
    ```bash
-   git commit -m "feat(<scope>): <short description of what was built>"
+   git commit -m "feat(<scope>): <short description of what was built>" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
    # Examples:
-   # git commit -m "feat(game): add game query and category filter endpoints"
-   # git commit -m "feat(order): implement key generation and stock deduction transaction"
+   # git commit -m "feat(game): add game query and category filter endpoints" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
+   # git commit -m "feat(order): implement key generation and stock deduction transaction" -m "Co-authored-by: Antigravity Agent <agent@antigravity.google.com>"
    ```
 3. Push the feature branch to GitHub remote:
    ```bash
@@ -60,11 +60,11 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
    ```
 
 ### Step 4: Pull Request Creation
-1. Create a Pull Request targeting `development` using the GitHub CLI (`gh`):
+1. Create a Pull Request targeting `development` with the `agent` label using the GitHub CLI (`gh`):
    ```bash
-   gh pr create --base development --head feature/<short-descriptive-kebab-name> --title "feat(<scope>): <Title>" --body "<Body>"
+   gh pr create --base development --head feature/<short-descriptive-kebab-name> --label "agent" --title "feat(<scope>): <Title>" --body-file pr_body.md
    ```
-   *(If `gh` CLI is not installed or authenticated, provide the direct GitHub PR URL output by git push: `https://github.com/collapseeee/SE327-project-mouse-jerry-backend/pull/new/feature/...`)*
+   *(If `gh` CLI is not installed or authenticated, provide the direct GitHub PR URL output by git push)*
 2. The PR description body MUST follow this template:
    ```markdown
    ## 📌 Summary of Changes
