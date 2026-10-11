@@ -27,11 +27,23 @@ class DaoDbImplTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private com.mousejerry.backend.repository.CategoryRepository categoryRepository;
+
+    @Mock
+    private com.mousejerry.backend.repository.GameRepository gameRepository;
+
     @InjectMocks
     private UserDaoDbImpl userDao;
 
     @InjectMocks
     private OrderDaoDbImpl orderDao;
+
+    @InjectMocks
+    private com.mousejerry.backend.dao.impl.CategoryDaoDbImpl categoryDao;
+
+    @InjectMocks
+    private com.mousejerry.backend.dao.impl.GameDaoDbImpl gameDao;
 
     @Test
     void testUserDaoDelegation() {
@@ -77,5 +89,110 @@ class DaoDbImplTest {
         verify(orderRepository).findById(2L);
         verify(orderRepository).findByUserIdOrderByPurchaseDateDesc(1L);
         verify(orderRepository).findByOrderNumber("ORD-2");
+    }
+
+    @Test
+    void testCategoryDaoDelegation() {
+        com.mousejerry.backend.entity.Category cat = com.mousejerry.backend.entity.Category.builder().id(1L).name("Fighting").slug("fighting").build();
+
+        when(categoryRepository.save(cat)).thenReturn(cat);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
+        when(categoryRepository.findByNameIgnoreCase("Fighting")).thenReturn(Optional.of(cat));
+        when(categoryRepository.findBySlugIgnoreCase("fighting")).thenReturn(Optional.of(cat));
+        when(categoryRepository.findByIsVisibleTrueOrderByNameAsc()).thenReturn(List.of(cat));
+        when(categoryRepository.findAll()).thenReturn(List.of(cat));
+
+        assertSame(cat, categoryDao.save(cat));
+        assertTrue(categoryDao.findById(1L).isPresent());
+        assertTrue(categoryDao.findByName("Fighting").isPresent());
+        assertTrue(categoryDao.findBySlug("fighting").isPresent());
+        assertEquals(1, categoryDao.findAllVisible().size());
+        assertEquals(1, categoryDao.findAll().size());
+
+        verify(categoryRepository).save(cat);
+        verify(categoryRepository).findById(1L);
+        verify(categoryRepository).findByNameIgnoreCase("Fighting");
+        verify(categoryRepository).findBySlugIgnoreCase("fighting");
+        verify(categoryRepository).findByIsVisibleTrueOrderByNameAsc();
+        verify(categoryRepository).findAll();
+    }
+
+    @Test
+    void testGameDaoDelegation() {
+        com.mousejerry.backend.entity.Game game = com.mousejerry.backend.entity.Game.builder().id("clone-drone").name("Clone Drone").build();
+        org.springframework.data.domain.Page<com.mousejerry.backend.entity.Game> page = new org.springframework.data.domain.PageImpl<>(List.of(game));
+
+        when(gameRepository.save(game)).thenReturn(game);
+        when(gameRepository.findById("clone-drone")).thenReturn(Optional.of(game));
+        when(gameRepository.findByIsHighlightTrue()).thenReturn(List.of(game));
+        when(gameRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
+
+        assertSame(game, gameDao.save(game));
+        assertTrue(gameDao.findById("clone-drone").isPresent());
+        assertEquals(1, gameDao.findHighlights().size());
+        assertEquals(1, gameDao.findGames("Fighting", "drone", org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
+
+        verify(gameRepository).save(game);
+        verify(gameRepository).findById("clone-drone");
+        verify(gameRepository).findByIsHighlightTrue();
+        verify(gameRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void testBuildSpecificationWithFilters() {
+        org.springframework.data.jpa.domain.Specification<com.mousejerry.backend.entity.Game> spec =
+                gameDao.buildSpecification("Fighting", "drone");
+        assertNotNull(spec);
+
+        jakarta.persistence.criteria.Root<com.mousejerry.backend.entity.Game> root = mock(jakarta.persistence.criteria.Root.class);
+        jakarta.persistence.criteria.CriteriaQuery query = mock(jakarta.persistence.criteria.CriteriaQuery.class);
+        jakarta.persistence.criteria.CriteriaBuilder cb = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+
+        jakarta.persistence.criteria.Join primaryCatJoin = mock(jakarta.persistence.criteria.Join.class);
+        jakarta.persistence.criteria.Join catJoin = mock(jakarta.persistence.criteria.Join.class);
+        jakarta.persistence.criteria.Join searchCatJoin = mock(jakarta.persistence.criteria.Join.class);
+
+        when(root.join("primaryCategory", jakarta.persistence.criteria.JoinType.LEFT)).thenReturn(primaryCatJoin);
+        when(root.join("categories", jakarta.persistence.criteria.JoinType.LEFT)).thenReturn(catJoin).thenReturn(searchCatJoin);
+
+        jakarta.persistence.criteria.Path namePath = mock(jakarta.persistence.criteria.Path.class);
+        when(primaryCatJoin.get("name")).thenReturn(namePath);
+        when(primaryCatJoin.get("slug")).thenReturn(namePath);
+        when(catJoin.get("name")).thenReturn(namePath);
+        when(catJoin.get("slug")).thenReturn(namePath);
+        when(searchCatJoin.get("name")).thenReturn(namePath);
+        when(root.get("name")).thenReturn(namePath);
+
+        jakarta.persistence.criteria.Expression lowerExpr = mock(jakarta.persistence.criteria.Expression.class);
+        when(cb.lower(any())).thenReturn(lowerExpr);
+
+        jakarta.persistence.criteria.Predicate pred = mock(jakarta.persistence.criteria.Predicate.class);
+        when(cb.equal(any(), anyString())).thenReturn(pred);
+        when(cb.like(any(), anyString())).thenReturn(pred);
+        when(cb.or(any(), any(), any(), any())).thenReturn(pred);
+        when(cb.or(any(), any())).thenReturn(pred);
+        when(cb.and(any(jakarta.persistence.criteria.Predicate[].class))).thenReturn(pred);
+
+        jakarta.persistence.criteria.Predicate result = spec.toPredicate(root, query, cb);
+        assertNotNull(result);
+        verify(query).distinct(true);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void testBuildSpecificationEmptyFilters() {
+        org.springframework.data.jpa.domain.Specification<com.mousejerry.backend.entity.Game> spec =
+                gameDao.buildSpecification(null, "");
+        assertNotNull(spec);
+
+        jakarta.persistence.criteria.Root<com.mousejerry.backend.entity.Game> root = mock(jakarta.persistence.criteria.Root.class);
+        jakarta.persistence.criteria.CriteriaBuilder cb = mock(jakarta.persistence.criteria.CriteriaBuilder.class);
+
+        jakarta.persistence.criteria.Predicate pred = mock(jakarta.persistence.criteria.Predicate.class);
+        when(cb.and(any(jakarta.persistence.criteria.Predicate[].class))).thenReturn(pred);
+
+        jakarta.persistence.criteria.Predicate result = spec.toPredicate(root, null, cb);
+        assertNotNull(result);
     }
 }
