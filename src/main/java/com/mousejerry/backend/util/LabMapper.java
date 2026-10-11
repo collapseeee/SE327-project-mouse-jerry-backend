@@ -10,9 +10,11 @@ import com.mousejerry.backend.entity.Game;
 import com.mousejerry.backend.entity.Order;
 import com.mousejerry.backend.entity.OrderItemKey;
 import com.mousejerry.backend.entity.User;
+import org.hibernate.Hibernate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.Collections;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -32,11 +34,46 @@ public interface LabMapper {
 
     List<CategoryDTO> toCategoryDTOList(List<Category> categories);
 
-    @Mapping(target = "category", expression = "java(game.getPrimaryCategory() != null ? game.getPrimaryCategory().getName() : null)")
-    @Mapping(target = "categories", expression = "java(game.getCategories() != null ? game.getCategories().stream().map(com.mousejerry.backend.entity.Category::getName).sorted().toList() : java.util.Collections.emptyList())")
-    @Mapping(target = "screenshots", expression = "java(game.getScreenshots() != null ? game.getScreenshots().stream().map(com.mousejerry.backend.entity.GameScreenshot::getUrl).toList() : java.util.Collections.emptyList())")
+    @Mapping(target = "category", expression = "java(mapPrimaryCategoryName(game))")
+    @Mapping(target = "categories", expression = "java(mapCategoryNames(game))")
+    @Mapping(target = "screenshots", expression = "java(mapScreenshotUrls(game))")
     GameDTO toGameDTO(Game game);
 
     List<GameDTO> toGameDTOList(List<Game> games);
+
+    default String mapPrimaryCategoryName(Game game) {
+        if (game == null || game.getPrimaryCategory() == null) {
+            return null;
+        }
+        if (!Hibernate.isInitialized(game.getPrimaryCategory())) {
+            return null;
+        }
+        return game.getPrimaryCategory().getName();
+    }
+
+    default List<String> mapCategoryNames(Game game) {
+        if (game == null || game.getCategories() == null) {
+            return Collections.emptyList();
+        }
+        if (!Hibernate.isInitialized(game.getCategories())) {
+            return Collections.emptyList();
+        }
+        return game.getCategories().stream()
+                .map(Category::getName)
+                .sorted()
+                .toList();
+    }
+
+    default List<String> mapScreenshotUrls(Game game) {
+        if (game == null || game.getScreenshots() == null) {
+            return Collections.emptyList();
+        }
+        if (!Hibernate.isInitialized(game.getScreenshots())) {
+            return Collections.emptyList();
+        }
+        return game.getScreenshots().stream()
+                .map(com.mousejerry.backend.entity.GameScreenshot::getUrl)
+                .toList();
+    }
 }
 
