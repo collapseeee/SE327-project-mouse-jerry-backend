@@ -79,4 +79,19 @@ public class GameDaoDbImpl implements GameDao {
     public Game save(Game game) {
         return gameRepository.save(game);
     }
+
+    @Override
+    public void delete(Game game) {
+        gameRepository.delete(game);
+    }
+
+    @Override
+    public void deleteById(String id) {
+        gameRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(String id) {
+        return gameRepository.existsById(id);
+    }
 }
