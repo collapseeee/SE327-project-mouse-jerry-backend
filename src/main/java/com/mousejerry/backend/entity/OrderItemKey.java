@@ -24,8 +24,14 @@ public class OrderItemKey {
     @EqualsAndHashCode.Exclude
     private Order order;
 
+    @Column(name = "game_id")
+    private String gameId;
+
     @Column(name = "game_title", nullable = false)
     private String gameTitle;
+
+    @Column(name = "cover_image")
+    private String coverImage;
 
     @Column(name = "game_key", nullable = false)
     private String gameKey;
