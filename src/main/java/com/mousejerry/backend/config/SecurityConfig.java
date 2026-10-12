@@ -78,7 +78,7 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/users/**", "/api/v1/cart/**", "/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/users/**", "/api/v1/cart/**", "/api/v1/orders/**", "/api/v1/upload/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
