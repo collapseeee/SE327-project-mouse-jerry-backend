@@ -145,15 +145,24 @@ class DaoDbImplTest {
         when(gameRepository.findByIsHighlightTrue()).thenReturn(List.of(game));
         when(gameRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
 
+        when(gameRepository.existsById("clone-drone")).thenReturn(true);
+
         assertSame(game, gameDao.save(game));
         assertTrue(gameDao.findById("clone-drone").isPresent());
+        assertTrue(gameDao.existsById("clone-drone"));
         assertEquals(1, gameDao.findHighlights().size());
         assertEquals(1, gameDao.findGames("Fighting", "drone", org.springframework.data.domain.Pageable.unpaged()).getTotalElements());
 
+        gameDao.delete(game);
+        gameDao.deleteById("clone-drone");
+
         verify(gameRepository).save(game);
         verify(gameRepository).findById("clone-drone");
+        verify(gameRepository).existsById("clone-drone");
         verify(gameRepository).findByIsHighlightTrue();
         verify(gameRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Pageable.class));
+        verify(gameRepository).delete(game);
+        verify(gameRepository).deleteById("clone-drone");
     }
 
     @Test
