@@ -102,12 +102,24 @@ class DaoDbImplTest {
         when(categoryRepository.findByIsVisibleTrueOrderByNameAsc()).thenReturn(List.of(cat));
         when(categoryRepository.findAll()).thenReturn(List.of(cat));
 
+        when(categoryRepository.existsByNameIgnoreCase("Fighting")).thenReturn(true);
+        when(categoryRepository.existsBySlugIgnoreCase("fighting")).thenReturn(true);
+        when(categoryRepository.existsByNameIgnoreCaseAndIdNot("Fighting", 2L)).thenReturn(false);
+        when(categoryRepository.existsBySlugIgnoreCaseAndIdNot("fighting", 2L)).thenReturn(false);
+
         assertSame(cat, categoryDao.save(cat));
         assertTrue(categoryDao.findById(1L).isPresent());
         assertTrue(categoryDao.findByName("Fighting").isPresent());
         assertTrue(categoryDao.findBySlug("fighting").isPresent());
         assertEquals(1, categoryDao.findAllVisible().size());
         assertEquals(1, categoryDao.findAll().size());
+        assertTrue(categoryDao.existsByName("Fighting"));
+        assertTrue(categoryDao.existsBySlug("fighting"));
+        assertFalse(categoryDao.existsByNameAndIdNot("Fighting", 2L));
+        assertFalse(categoryDao.existsBySlugAndIdNot("fighting", 2L));
+
+        categoryDao.delete(cat);
+        categoryDao.deleteById(1L);
 
         verify(categoryRepository).save(cat);
         verify(categoryRepository).findById(1L);
@@ -115,6 +127,12 @@ class DaoDbImplTest {
         verify(categoryRepository).findBySlugIgnoreCase("fighting");
         verify(categoryRepository).findByIsVisibleTrueOrderByNameAsc();
         verify(categoryRepository).findAll();
+        verify(categoryRepository).existsByNameIgnoreCase("Fighting");
+        verify(categoryRepository).existsBySlugIgnoreCase("fighting");
+        verify(categoryRepository).existsByNameIgnoreCaseAndIdNot("Fighting", 2L);
+        verify(categoryRepository).existsBySlugIgnoreCaseAndIdNot("fighting", 2L);
+        verify(categoryRepository).delete(cat);
+        verify(categoryRepository).deleteById(1L);
     }
 
     @Test

@@ -17,5 +17,17 @@ public interface CategoryDao {
 
     Optional<Category> findBySlug(String slug);
 
+    boolean existsByName(String name);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsByNameAndIdNot(String name, Long id);
+
+    boolean existsBySlugAndIdNot(String slug, Long id);
+
     Category save(Category category);
+
+    void delete(Category category);
+
+    void deleteById(Long id);
 }
