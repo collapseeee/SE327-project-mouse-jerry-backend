@@ -216,4 +216,60 @@ class LabMapperTest {
         assertEquals(1, list.size());
         assertEquals("g1", list.get(0).getId());
     }
+
+    @Test
+    void testToCartItemDTO() {
+        assertNull(labMapper.toCartItemDTO(null));
+
+        com.mousejerry.backend.entity.Game game = com.mousejerry.backend.entity.Game.builder()
+                .id("bf3")
+                .name("Battlefield 3")
+                .price(BigDecimal.valueOf(1969))
+                .coverImage("bf3.jpg")
+                .stock(5)
+                .build();
+
+        com.mousejerry.backend.entity.CartItem item = com.mousejerry.backend.entity.CartItem.builder()
+                .id(1L)
+                .game(game)
+                .quantity(2)
+                .build();
+
+        com.mousejerry.backend.dto.CartItemDTO dto = labMapper.toCartItemDTO(item);
+        assertNotNull(dto);
+        assertEquals(1L, dto.getId());
+        assertEquals("bf3", dto.getGameId());
+        assertEquals("Battlefield 3", dto.getGameTitle());
+        assertEquals("bf3.jpg", dto.getCoverImage());
+        assertEquals(BigDecimal.valueOf(1969), dto.getUnitPrice());
+        assertEquals(2, dto.getQuantity());
+        assertEquals(BigDecimal.valueOf(3938), dto.getTotalPrice());
+        assertEquals(5, dto.getStock());
+    }
+
+    @Test
+    void testToCartItemDTOList() {
+        assertNull(labMapper.toCartItemDTOList(null));
+
+        com.mousejerry.backend.entity.CartItem item = com.mousejerry.backend.entity.CartItem.builder().id(1L).build();
+        List<com.mousejerry.backend.dto.CartItemDTO> list = labMapper.toCartItemDTOList(List.of(item));
+        assertNotNull(list);
+        assertEquals(1, list.size());
+    }
+
+    @Test
+    void testCalculateItemTotalPrice_EdgeCases() {
+        assertEquals(BigDecimal.ZERO, labMapper.calculateItemTotalPrice(null));
+
+        com.mousejerry.backend.entity.CartItem noGame = com.mousejerry.backend.entity.CartItem.builder().game(null).build();
+        assertEquals(BigDecimal.ZERO, labMapper.calculateItemTotalPrice(noGame));
+
+        com.mousejerry.backend.entity.Game noPriceGame = com.mousejerry.backend.entity.Game.builder().price(null).build();
+        com.mousejerry.backend.entity.CartItem noPrice = com.mousejerry.backend.entity.CartItem.builder().game(noPriceGame).build();
+        assertEquals(BigDecimal.ZERO, labMapper.calculateItemTotalPrice(noPrice));
+
+        com.mousejerry.backend.entity.Game validGame = com.mousejerry.backend.entity.Game.builder().price(BigDecimal.valueOf(100)).build();
+        com.mousejerry.backend.entity.CartItem nullQty = com.mousejerry.backend.entity.CartItem.builder().game(validGame).quantity(null).build();
+        assertEquals(BigDecimal.ZERO, labMapper.calculateItemTotalPrice(nullQty));
+    }
 }
