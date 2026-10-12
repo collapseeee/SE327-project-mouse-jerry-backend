@@ -273,4 +273,113 @@ class CategoryServiceImplTest {
         assertFalse(game.getCategories().contains(cat));
         org.mockito.Mockito.verify(categoryDao).delete(cat);
     }
+
+    @Test
+    void createCategory_NullName_ThrowsIllegalArgument() {
+        com.mousejerry.backend.dto.CreateCategoryRequest req = com.mousejerry.backend.dto.CreateCategoryRequest.builder()
+                .name(null)
+                .build();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> categoryService.createCategory(req));
+        assertEquals("Category name cannot be blank", ex.getMessage());
+    }
+
+    @Test
+    void createCategory_BlankCustomSlug_FallsBackToGeneratedSlug() {
+        com.mousejerry.backend.dto.CreateCategoryRequest req = com.mousejerry.backend.dto.CreateCategoryRequest.builder()
+                .name("Survival Horror")
+                .slug("   ")
+                .build();
+
+        when(categoryDao.existsByName("Survival Horror")).thenReturn(false);
+        when(categoryDao.existsBySlug("survival-horror")).thenReturn(false);
+        when(categoryDao.save(org.mockito.ArgumentMatchers.any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Category result = categoryService.createCategory(req);
+        assertEquals("survival-horror", result.getSlug());
+    }
+
+    @Test
+    void createCategory_NonAlphanumericName_ReturnsOriginalNameAsSlug() {
+        com.mousejerry.backend.dto.CreateCategoryRequest req = com.mousejerry.backend.dto.CreateCategoryRequest.builder()
+                .name("???")
+                .build();
+
+        when(categoryDao.existsByName("???")).thenReturn(false);
+        when(categoryDao.existsBySlug("???")).thenReturn(false);
+        when(categoryDao.save(org.mockito.ArgumentMatchers.any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Category result = categoryService.createCategory(req);
+        assertEquals("???", result.getSlug());
+    }
+
+    @Test
+    void updateCategory_NullName_ThrowsIllegalArgument() {
+        Category existing = Category.builder().id(1L).name("Fighting").build();
+        when(categoryDao.findById(1L)).thenReturn(Optional.of(existing));
+
+        com.mousejerry.backend.dto.UpdateCategoryRequest req = com.mousejerry.backend.dto.UpdateCategoryRequest.builder()
+                .name(null)
+                .build();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> categoryService.updateCategory(1L, req));
+        assertEquals("Category name cannot be blank", ex.getMessage());
+    }
+
+    @Test
+    void updateCategory_BlankCustomSlug_FallsBackToGeneratedSlug() {
+        Category existing = Category.builder().id(1L).name("Fighting").slug("fighting").isVisible(true).build();
+        com.mousejerry.backend.dto.UpdateCategoryRequest req = com.mousejerry.backend.dto.UpdateCategoryRequest.builder()
+                .name("Brawler")
+                .slug("   ")
+                .build();
+
+        when(categoryDao.findById(1L)).thenReturn(Optional.of(existing));
+        when(categoryDao.existsByNameAndIdNot("Brawler", 1L)).thenReturn(false);
+        when(categoryDao.existsBySlugAndIdNot("brawler", 1L)).thenReturn(false);
+        when(categoryDao.save(org.mockito.ArgumentMatchers.any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Category result = categoryService.updateCategory(1L, req);
+        assertEquals("brawler", result.getSlug());
+    }
+
+    @Test
+    void deleteCategory_WhenGamesIsNull_DeletesSuccessfully() {
+        Category cat = Category.builder().id(1L).name("Fighting").games(null).build();
+        when(categoryDao.findById(1L)).thenReturn(Optional.of(cat));
+
+        categoryService.deleteCategory(1L);
+
+        org.mockito.Mockito.verify(categoryDao).delete(cat);
+    }
+
+    @Test
+    void deleteCategory_WhenGameHasNullCategoriesAndDifferentPrimaryCategory() {
+        Category cat = Category.builder().id(1L).name("Fighting").build();
+        Category otherCat = Category.builder().id(2L).name("Action").build();
+        com.mousejerry.backend.entity.Game game = com.mousejerry.backend.entity.Game.builder()
+                .id("g1")
+                .primaryCategory(otherCat)
+                .categories(null)
+                .build();
+        cat.setGames(new java.util.HashSet<>(java.util.List.of(game)));
+
+        when(categoryDao.findById(1L)).thenReturn(Optional.of(cat));
+
+        categoryService.deleteCategory(1L);
+
+        assertEquals(otherCat, game.getPrimaryCategory());
+        assertNull(game.getCategories());
+        org.mockito.Mockito.verify(categoryDao).delete(cat);
+    }
+
+    @Test
+    void toggleVisibility_WhenCurrentVisibilityIsNull_DefaultsToTrue() {
+        Category existing = Category.builder().id(1L).name("Fighting").isVisible(null).build();
+        when(categoryDao.findById(1L)).thenReturn(Optional.of(existing));
+        when(categoryDao.save(org.mockito.ArgumentMatchers.any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Category result = categoryService.toggleVisibility(1L, null);
+        assertTrue(result.getIsVisible());
+    }
 }

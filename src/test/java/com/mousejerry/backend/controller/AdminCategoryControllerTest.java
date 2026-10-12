@@ -216,4 +216,98 @@ class AdminCategoryControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Category not found with id: 99"));
     }
+
+    @Test
+    void toggleVisibilityPost_WithBody_ReturnsOk() throws Exception {
+        CategoryVisibilityRequest request = CategoryVisibilityRequest.builder().isVisible(true).build();
+        Category toggled = Category.builder().id(1L).name("Fighting").isVisible(true).build();
+        CategoryDTO dto = CategoryDTO.builder().id(1L).name("Fighting").isVisible(true).build();
+
+        when(categoryService.toggleVisibility(1L, true)).thenReturn(toggled);
+        when(labMapper.toCategoryDTO(toggled)).thenReturn(dto);
+
+        mockMvc.perform(post("/api/v1/admin/categories/1/toggle-visibility")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isVisible").value(true));
+    }
+
+    @Test
+    void createCategory_DuplicateName_ReturnsBadRequest() throws Exception {
+        CreateCategoryRequest request = CreateCategoryRequest.builder()
+                .name("Fighting")
+                .build();
+
+        when(categoryService.createCategory(any(CreateCategoryRequest.class)))
+                .thenThrow(new IllegalArgumentException("Category already exists with name: Fighting"));
+
+        mockMvc.perform(post("/api/v1/admin/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Category already exists with name: Fighting"));
+    }
+
+    @Test
+    void createCategory_DuplicateSlug_ReturnsBadRequest() throws Exception {
+        CreateCategoryRequest request = CreateCategoryRequest.builder()
+                .name("Fighting 2")
+                .slug("fighting")
+                .build();
+
+        when(categoryService.createCategory(any(CreateCategoryRequest.class)))
+                .thenThrow(new IllegalArgumentException("Category already exists with slug: fighting"));
+
+        mockMvc.perform(post("/api/v1/admin/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Category already exists with slug: fighting"));
+    }
+
+    @Test
+    void updateCategory_DuplicateSlug_ReturnsBadRequest() throws Exception {
+        UpdateCategoryRequest request = UpdateCategoryRequest.builder()
+                .name("RPG")
+                .slug("fighting")
+                .build();
+
+        when(categoryService.updateCategory(eq(1L), any(UpdateCategoryRequest.class)))
+                .thenThrow(new IllegalArgumentException("Category already exists with slug: fighting"));
+
+        mockMvc.perform(put("/api/v1/admin/categories/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Category already exists with slug: fighting"));
+    }
+
+    @Test
+    void createCategory_NameTooLong_ReturnsBadRequest() throws Exception {
+        String longName = "A".repeat(101);
+        CreateCategoryRequest request = CreateCategoryRequest.builder()
+                .name(longName)
+                .build();
+
+        mockMvc.perform(post("/api/v1/admin/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation failed"));
+    }
+
+    @Test
+    void updateCategory_NameTooLong_ReturnsBadRequest() throws Exception {
+        String longName = "A".repeat(101);
+        UpdateCategoryRequest request = UpdateCategoryRequest.builder()
+                .name(longName)
+                .build();
+
+        mockMvc.perform(put("/api/v1/admin/categories/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation failed"));
+    }
 }
