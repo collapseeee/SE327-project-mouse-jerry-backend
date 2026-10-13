@@ -42,6 +42,7 @@ public interface LabMapper {
     @Mapping(target = "category", expression = "java(mapPrimaryCategoryName(game))")
     @Mapping(target = "categories", expression = "java(mapCategoryNames(game))")
     @Mapping(target = "screenshots", expression = "java(mapScreenshotUrls(game))")
+    @Mapping(target = "systemRequirements", expression = "java(mapSystemRequirements(game))")
     GameDTO toGameDTO(Game game);
 
     List<GameDTO> toGameDTOList(List<Game> games);
@@ -97,5 +98,22 @@ public interface LabMapper {
         return game.getScreenshots().stream()
                 .map(com.mousejerry.backend.entity.GameScreenshot::getUrl)
                 .toList();
+    }
+
+    default com.mousejerry.backend.dto.SystemRequirementsDTO mapSystemRequirements(Game game) {
+        if (game == null || game.getSystemRequirements() == null) {
+            return null;
+        }
+        if (!Hibernate.isInitialized(game.getSystemRequirements())) {
+            return null;
+        }
+        com.mousejerry.backend.entity.SystemRequirements req = game.getSystemRequirements();
+        return com.mousejerry.backend.dto.SystemRequirementsDTO.builder()
+                .os(req.getOs())
+                .processor(req.getProcessor())
+                .memory(req.getMemory())
+                .graphics(req.getGraphics())
+                .storage(req.getStorage())
+                .build();
     }
 }

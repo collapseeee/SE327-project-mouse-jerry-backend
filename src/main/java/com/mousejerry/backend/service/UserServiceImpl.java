@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
         }
 
         String token = jwtUtils.generateToken(user);
-        String redirectUrl = (user.getRole() == Role.ROLE_ADMIN) ? "/admin/back-game" : "/home-page";
+        String redirectUrl = (user.getRole() == Role.ROLE_ADMIN) ? "/admin/games" : "/home-page";
 
         return AuthResponseDTO.builder()
                 .token(token)

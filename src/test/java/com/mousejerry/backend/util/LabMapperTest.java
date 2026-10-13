@@ -175,6 +175,16 @@ class LabMapperTest {
                 .build();
         game.setScreenshots(List.of(shot));
 
+        com.mousejerry.backend.entity.SystemRequirements req = com.mousejerry.backend.entity.SystemRequirements.builder()
+                .id(1L)
+                .os("Windows 10")
+                .processor("Intel Core i7")
+                .memory("16 GB")
+                .graphics("RTX 2060")
+                .storage("50 GB")
+                .build();
+        game.setSystemRequirements(req);
+
         com.mousejerry.backend.dto.GameDTO dto = labMapper.toGameDTO(game);
         assertNotNull(dto);
         assertEquals("clone-drone", dto.getId());
@@ -184,6 +194,12 @@ class LabMapperTest {
         assertTrue(dto.getCategories().contains("Action"));
         assertEquals(List.of("http://shot.jpg"), dto.getScreenshots());
         assertTrue(dto.getIsHighlight());
+        assertNotNull(dto.getSystemRequirements());
+        assertEquals("Windows 10", dto.getSystemRequirements().getOs());
+        assertEquals("Intel Core i7", dto.getSystemRequirements().getProcessor());
+        assertEquals("16 GB", dto.getSystemRequirements().getMemory());
+        assertEquals("RTX 2060", dto.getSystemRequirements().getGraphics());
+        assertEquals("50 GB", dto.getSystemRequirements().getStorage());
     }
 
     @Test
@@ -195,6 +211,7 @@ class LabMapperTest {
                 .primaryCategory(null)
                 .categories(null)
                 .screenshots(null)
+                .systemRequirements(null)
                 .build();
 
         com.mousejerry.backend.dto.GameDTO dto = labMapper.toGameDTO(game);
@@ -203,6 +220,7 @@ class LabMapperTest {
         assertNull(dto.getCategory());
         assertTrue(dto.getCategories().isEmpty());
         assertTrue(dto.getScreenshots().isEmpty());
+        assertNull(dto.getSystemRequirements());
     }
 
     @Test
