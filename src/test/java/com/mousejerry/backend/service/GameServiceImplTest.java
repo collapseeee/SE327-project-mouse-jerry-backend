@@ -3,6 +3,7 @@ package com.mousejerry.backend.service;
 import com.mousejerry.backend.dao.CategoryDao;
 import com.mousejerry.backend.dao.GameDao;
 import com.mousejerry.backend.dto.CreateGameRequest;
+import com.mousejerry.backend.dto.SystemRequirementsDTO;
 import com.mousejerry.backend.dto.UpdateGameRequest;
 import com.mousejerry.backend.entity.Category;
 import com.mousejerry.backend.entity.Game;
@@ -248,6 +249,78 @@ class GameServiceImplTest {
         assertTrue(updated.getIsHighlight());
         assertEquals(shooter, updated.getPrimaryCategory());
         assertEquals(1, updated.getScreenshots().size());
+    }
+
+    @Test
+    void createGame_WithSystemRequirements_Success() {
+        SystemRequirementsDTO reqDto = SystemRequirementsDTO.builder()
+                .os("Windows 10 64-bit")
+                .processor("Intel Core i5-8400")
+                .memory("16 GB RAM")
+                .graphics("NVIDIA GeForce GTX 1060 6GB")
+                .storage("60 GB available space")
+                .build();
+
+        CreateGameRequest request = CreateGameRequest.builder()
+                .id("cyberpunk")
+                .name("Cyberpunk 2077")
+                .price(BigDecimal.valueOf(59.99))
+                .systemRequirements(reqDto)
+                .build();
+
+        when(gameDao.existsById("cyberpunk")).thenReturn(false);
+        when(gameDao.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Game created = gameService.createGame(request);
+
+        assertNotNull(created);
+        assertNotNull(created.getSystemRequirements());
+        assertEquals("Windows 10 64-bit", created.getSystemRequirements().getOs());
+        assertEquals("Intel Core i5-8400", created.getSystemRequirements().getProcessor());
+        assertEquals("16 GB RAM", created.getSystemRequirements().getMemory());
+        assertEquals("NVIDIA GeForce GTX 1060 6GB", created.getSystemRequirements().getGraphics());
+        assertEquals("60 GB available space", created.getSystemRequirements().getStorage());
+    }
+
+    @Test
+    void updateGame_WithSystemRequirements_UpdatesExistingAndNullClears() {
+        Game existing = Game.builder()
+                .id("cyberpunk")
+                .name("Cyberpunk")
+                .price(BigDecimal.valueOf(50.0))
+                .screenshots(new ArrayList<>())
+                .build();
+
+        SystemRequirementsDTO reqDto = SystemRequirementsDTO.builder()
+                .os("Windows 11")
+                .processor("Ryzen 5 3600")
+                .memory("32 GB RAM")
+                .graphics("RTX 3070")
+                .storage("70 GB")
+                .build();
+
+        UpdateGameRequest request = UpdateGameRequest.builder()
+                .name("Cyberpunk 2077")
+                .price(BigDecimal.valueOf(50.0))
+                .systemRequirements(reqDto)
+                .build();
+
+        when(gameDao.findById("cyberpunk")).thenReturn(Optional.of(existing));
+        when(gameDao.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Game updated = gameService.updateGame("cyberpunk", request);
+        assertNotNull(updated.getSystemRequirements());
+        assertEquals("Windows 11", updated.getSystemRequirements().getOs());
+
+        // Now test updating with null clears requirements
+        UpdateGameRequest clearReq = UpdateGameRequest.builder()
+                .name("Cyberpunk 2077")
+                .price(BigDecimal.valueOf(50.0))
+                .systemRequirements(null)
+                .build();
+
+        Game cleared = gameService.updateGame("cyberpunk", clearReq);
+        assertNull(cleared.getSystemRequirements());
     }
 
     @Test
