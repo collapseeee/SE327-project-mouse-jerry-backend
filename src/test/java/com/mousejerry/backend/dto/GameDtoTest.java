@@ -105,9 +105,11 @@ class GameDtoTest {
 
         assertEquals("games/image.png", dto.getName());
         assertEquals("https://example.com/games/image.png", dto.getPublicUrl());
+        assertEquals("https://example.com/games/image.png", dto.getFileUrl());
 
         StorageFileDTO noArg = new StorageFileDTO();
         assertNull(noArg.getName());
+        assertNull(noArg.getFileUrl());
     }
 
     @Test

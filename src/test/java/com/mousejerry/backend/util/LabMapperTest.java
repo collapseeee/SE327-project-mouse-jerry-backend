@@ -290,4 +290,45 @@ class LabMapperTest {
         com.mousejerry.backend.entity.CartItem nullQty = com.mousejerry.backend.entity.CartItem.builder().game(validGame).quantity(null).build();
         assertEquals(BigDecimal.ZERO, labMapper.calculateItemTotalPrice(nullQty));
     }
+
+    @Test
+    void testToHighlightDTO() {
+        assertNull(labMapper.toHighlightDTO(null));
+
+        com.mousejerry.backend.entity.Game game = com.mousejerry.backend.entity.Game.builder()
+                .id("elden-ring")
+                .name("Elden Ring")
+                .build();
+        com.mousejerry.backend.entity.Highlight highlight = com.mousejerry.backend.entity.Highlight.builder()
+                .id(1L)
+                .game(game)
+                .customImage("https://img.test/banner.jpg")
+                .buttonColor("#8b0000")
+                .build();
+
+        com.mousejerry.backend.dto.HighlightDTO dto = labMapper.toHighlightDTO(highlight);
+        assertNotNull(dto);
+        assertEquals(1L, dto.getId());
+        assertEquals("elden-ring", dto.getGameId());
+        assertEquals("Elden Ring", dto.getGameName());
+        assertEquals("https://img.test/banner.jpg", dto.getCustomImage());
+        assertEquals("#8b0000", dto.getButtonColor());
+
+        // Test with null game
+        com.mousejerry.backend.entity.Highlight noGame = com.mousejerry.backend.entity.Highlight.builder().id(2L).build();
+        com.mousejerry.backend.dto.HighlightDTO noGameDto = labMapper.toHighlightDTO(noGame);
+        assertNotNull(noGameDto);
+        assertNull(noGameDto.getGameId());
+        assertNull(noGameDto.getGameName());
+    }
+
+    @Test
+    void testToHighlightDTOList() {
+        assertNull(labMapper.toHighlightDTOList(null));
+
+        com.mousejerry.backend.entity.Highlight highlight = com.mousejerry.backend.entity.Highlight.builder().id(1L).build();
+        List<com.mousejerry.backend.dto.HighlightDTO> list = labMapper.toHighlightDTOList(List.of(highlight));
+        assertNotNull(list);
+        assertEquals(1, list.size());
+    }
 }

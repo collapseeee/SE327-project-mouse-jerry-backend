@@ -44,6 +44,7 @@ class StorageServiceImplTest {
         storageService = new StorageServiceImpl(s3Client, s3Presigner);
         ReflectionTestUtils.setField(storageService, "bucket", "mouse-jerry");
         ReflectionTestUtils.setField(storageService, "publicBaseUrl", "https://supabase.co/storage/v1/s3/mouse-jerry");
+        ReflectionTestUtils.setField(storageService, "localUploadDir", "target/test-uploads");
     }
 
     @Test
@@ -83,6 +84,27 @@ class StorageServiceImplTest {
 
         assertNotNull(result);
         assertTrue(result.getName().endsWith("game.jpg"));
+    }
+
+    @Test
+    void uploadImage_S3Exception_FallsBackToLocalStorage() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "fallback.png",
+                "image/png",
+                "fallback-content".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.AccessDeniedException.builder().message("Missing signature").build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getName().startsWith("games/"));
+        assertTrue(result.getName().endsWith("fallback.png"));
+        assertTrue(result.getPublicUrl().startsWith("/api/v1/upload/files/games/"));
+        assertEquals(result.getPublicUrl(), result.getFileUrl());
     }
 
     @Test

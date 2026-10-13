@@ -13,4 +13,8 @@ public class StorageFileDTO {
 
     private String name;
     private String publicUrl;
+
+    public String getFileUrl() {
+        return publicUrl;
+    }
 }
