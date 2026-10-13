@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -271,7 +272,7 @@ class CategoryServiceImplTest {
 
         assertNull(game.getPrimaryCategory());
         assertFalse(game.getCategories().contains(cat));
-        org.mockito.Mockito.verify(categoryDao).delete(cat);
+        verify(categoryDao).delete(cat);
     }
 
     @Test
@@ -350,7 +351,7 @@ class CategoryServiceImplTest {
 
         categoryService.deleteCategory(1L);
 
-        org.mockito.Mockito.verify(categoryDao).delete(cat);
+        verify(categoryDao).delete(cat);
     }
 
     @Test
@@ -370,7 +371,7 @@ class CategoryServiceImplTest {
 
         assertEquals(otherCat, game.getPrimaryCategory());
         assertNull(game.getCategories());
-        org.mockito.Mockito.verify(categoryDao).delete(cat);
+        verify(categoryDao).delete(cat);
     }
 
     @Test

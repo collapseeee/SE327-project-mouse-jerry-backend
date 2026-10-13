@@ -114,15 +114,9 @@ public class StorageServiceImpl implements StorageService {
         String effectiveContentType = resolveContentType(contentType, extension);
         String objectKey = generateObjectKey(filename);
 
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(objectKey)
-                .contentType(effectiveContentType)
-                .build();
-
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
                 .signatureDuration(PRESIGNED_URL_EXPIRATION)
-                .putObjectRequest(putObjectRequest)
+                .putObjectRequest(b -> b.bucket(bucket).key(objectKey).contentType(effectiveContentType))
                 .build();
 
         PresignedPutObjectRequest presignedPutObjectRequest = s3Presigner.presignPutObject(presignRequest);
@@ -175,7 +169,13 @@ public class StorageServiceImpl implements StorageService {
     }
 
     private String buildPublicUrl(String key) {
-        String base = publicBaseUrl != null ? publicBaseUrl.replaceAll("/+$", "") : "";
+        if (publicBaseUrl == null || publicBaseUrl.isBlank()) {
+            return "/" + key;
+        }
+        String base = publicBaseUrl.stripTrailing();
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
         return base + "/" + key;
     }
 }

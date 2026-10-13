@@ -45,5 +45,5 @@ public class Highlight {
 
     @Column(name = "created_at")
     @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
 }
