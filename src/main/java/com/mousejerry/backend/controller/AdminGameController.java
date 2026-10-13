@@ -50,21 +50,10 @@ public class AdminGameController {
             @RequestParam(defaultValue = "name") String sort,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        int pageNumber = Math.max(page - 1, 0);
-        int pageSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortDir, sort));
-
+        Pageable pageable = com.mousejerry.backend.util.PaginationUtil.createPageable(page, size, sort, direction, MAX_PAGE_SIZE);
         Page<Game> gamePage = gameService.getGames(category, search, pageable);
         List<GameDTO> dtos = labMapper.toGameDTOList(gamePage.getContent());
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(gamePage.getTotalElements()));
-        headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Total-Count");
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(dtos);
+        return com.mousejerry.backend.util.PaginationUtil.toPagedResponse(gamePage, dtos);
     }
 
     @GetMapping("/{id}")
