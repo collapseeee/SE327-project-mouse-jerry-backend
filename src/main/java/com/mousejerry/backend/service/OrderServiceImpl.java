@@ -114,47 +114,70 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Cannot checkout with an empty cart");
         }
 
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (CartItem item : cartItems) {
-            BigDecimal price = item.getGame() != null && item.getGame().getPrice() != null
-                    ? item.getGame().getPrice()
-                    : BigDecimal.ZERO;
-            int qty = item.getQuantity() != null ? item.getQuantity() : 0;
-            totalAmount = totalAmount.add(price.multiply(BigDecimal.valueOf(qty)));
-        }
-
         Order order = Order.builder()
                 .orderNumber(GameKeyGenerator.generateOrderNumber())
                 .user(user)
-                .totalAmount(totalAmount)
+                .totalAmount(calculateTotalAmount(cartItems))
                 .purchaseDate(LocalDateTime.now(java.time.ZoneOffset.UTC))
                 .items(new ArrayList<>())
                 .build();
 
-        for (CartItem item : cartItems) {
-            Game game = item.getGame();
-            BigDecimal price = game != null && game.getPrice() != null ? game.getPrice() : BigDecimal.ZERO;
-            String gameId = game != null ? game.getId() : null;
-            String gameTitle = game != null ? game.getName() : "Unknown Game";
-            String coverImage = game != null ? game.getCoverImage() : null;
-            int qty = item.getQuantity() != null ? item.getQuantity() : 0;
-
-            for (int i = 0; i < qty; i++) {
-                OrderItemKey itemKey = OrderItemKey.builder()
-                        .order(order)
-                        .gameId(gameId)
-                        .gameTitle(gameTitle)
-                        .coverImage(coverImage)
-                        .gameKey(GameKeyGenerator.generateKey())
-                        .price(price)
-                        .build();
-                order.getItems().add(itemKey);
-            }
-        }
+        order.getItems().addAll(createOrderItemKeys(order, cartItems));
 
         Order saved = orderDao.save(order);
         cartDao.deleteByUserId(user.getId());
         return labMapper.toOrderDTO(saved);
+    }
+
+    private BigDecimal calculateTotalAmount(List<CartItem> cartItems) {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (CartItem item : cartItems) {
+            BigDecimal price = resolveItemPrice(item);
+            int qty = resolveItemQuantity(item);
+            totalAmount = totalAmount.add(price.multiply(BigDecimal.valueOf(qty)));
+        }
+        return totalAmount;
+    }
+
+    private List<OrderItemKey> createOrderItemKeys(Order order, List<CartItem> cartItems) {
+        List<OrderItemKey> itemKeys = new ArrayList<>();
+        for (CartItem item : cartItems) {
+            itemKeys.addAll(createKeysForCartItem(order, item));
+        }
+        return itemKeys;
+    }
+
+    private List<OrderItemKey> createKeysForCartItem(Order order, CartItem item) {
+        List<OrderItemKey> keys = new ArrayList<>();
+        Game game = item != null ? item.getGame() : null;
+        BigDecimal price = resolveItemPrice(item);
+        String gameId = game != null ? game.getId() : null;
+        String gameTitle = (game != null && game.getName() != null) ? game.getName() : "Unknown Game";
+        String coverImage = game != null ? game.getCoverImage() : null;
+        int qty = resolveItemQuantity(item);
+
+        for (int i = 0; i < qty; i++) {
+            keys.add(OrderItemKey.builder()
+                    .order(order)
+                    .gameId(gameId)
+                    .gameTitle(gameTitle)
+                    .coverImage(coverImage)
+                    .gameKey(GameKeyGenerator.generateKey())
+                    .price(price)
+                    .build());
+        }
+        return keys;
+    }
+
+    private BigDecimal resolveItemPrice(CartItem item) {
+        if (item != null && item.getGame() != null && item.getGame().getPrice() != null) {
+            return item.getGame().getPrice();
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private int resolveItemQuantity(CartItem item) {
+        return (item != null && item.getQuantity() != null) ? item.getQuantity() : 0;
     }
 
     private User getUserOrThrow(String username) {

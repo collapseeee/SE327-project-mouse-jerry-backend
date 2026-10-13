@@ -60,7 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .name(name)
                 .slug(slug)
-                .isVisible(request.getIsVisible() != null ? request.getIsVisible() : true)
+                .isVisible(!Boolean.FALSE.equals(request.getIsVisible()))
                 .build();
 
         return categoryDao.save(category);
