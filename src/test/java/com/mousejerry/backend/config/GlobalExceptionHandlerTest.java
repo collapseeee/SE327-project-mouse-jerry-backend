@@ -32,6 +32,29 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void testHandleNoSuchElementException() {
+        java.util.NoSuchElementException ex = new java.util.NoSuchElementException("Not found");
+        ResponseEntity<Map<String, String>> response = exceptionHandler.handleNoSuchElementException(ex);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Not found", response.getBody().get("error"));
+    }
+
+    @Test
+    void testHandleNoResourceFoundException() {
+        org.springframework.web.servlet.resource.NoResourceFoundException ex =
+                new org.springframework.web.servlet.resource.NoResourceFoundException(
+                        org.springframework.http.HttpMethod.GET,
+                        "api/v1/admin/orders",
+                        "No static resource api/v1/admin/orders"
+                );
+        ResponseEntity<Map<String, String>> response = exceptionHandler.handleNoResourceFoundException(ex);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody().get("error"));
+    }
+
+    @Test
     void testHandleGenericException() {
         Exception ex = new RuntimeException("Server error");
         ResponseEntity<Map<String, String>> response = exceptionHandler.handleGenericException(ex);

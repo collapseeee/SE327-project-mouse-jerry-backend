@@ -33,6 +33,11 @@ public class OrderDaoDbImpl implements OrderDao {
     }
 
     @Override
+    public List<Order> findAllOrderByPurchaseDateDesc() {
+        return orderRepository.findAllByOrderByPurchaseDateDesc();
+    }
+
+    @Override
     public Optional<Order> findByOrderNumber(String orderNumber) {
         return orderRepository.findByOrderNumber(orderNumber);
     }

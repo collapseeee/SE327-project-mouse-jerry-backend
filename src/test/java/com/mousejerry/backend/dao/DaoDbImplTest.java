@@ -78,16 +78,19 @@ class DaoDbImplTest {
         when(orderRepository.save(order)).thenReturn(order);
         when(orderRepository.findById(2L)).thenReturn(Optional.of(order));
         when(orderRepository.findByUserIdOrderByPurchaseDateDesc(1L)).thenReturn(List.of(order));
+        when(orderRepository.findAllByOrderByPurchaseDateDesc()).thenReturn(List.of(order));
         when(orderRepository.findByOrderNumber("ORD-2")).thenReturn(Optional.of(order));
 
         assertSame(order, orderDao.save(order));
         assertTrue(orderDao.findById(2L).isPresent());
         assertEquals(1, orderDao.findByUserIdOrderByPurchaseDateDesc(1L).size());
+        assertEquals(1, orderDao.findAllOrderByPurchaseDateDesc().size());
         assertTrue(orderDao.findByOrderNumber("ORD-2").isPresent());
 
         verify(orderRepository).save(order);
         verify(orderRepository).findById(2L);
         verify(orderRepository).findByUserIdOrderByPurchaseDateDesc(1L);
+        verify(orderRepository).findAllByOrderByPurchaseDateDesc();
         verify(orderRepository).findByOrderNumber("ORD-2");
     }
 

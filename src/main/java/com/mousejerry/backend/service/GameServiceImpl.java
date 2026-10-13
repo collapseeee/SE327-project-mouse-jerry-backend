@@ -165,7 +165,7 @@ public class GameServiceImpl implements GameService {
         }
         String slug = input.trim().toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("^-+|-+$", "");
+                .replaceAll("(^-+)|(-+$)", "");
         return slug.isEmpty() ? "game-" + UUID.randomUUID().toString().substring(0, 8) : slug;
     }
 

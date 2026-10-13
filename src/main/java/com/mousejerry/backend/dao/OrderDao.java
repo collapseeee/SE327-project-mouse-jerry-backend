@@ -13,5 +13,7 @@ public interface OrderDao {
 
     List<Order> findByUserIdOrderByPurchaseDateDesc(Long userId);
 
+    List<Order> findAllOrderByPurchaseDateDesc();
+
     Optional<Order> findByOrderNumber(String orderNumber);
 }

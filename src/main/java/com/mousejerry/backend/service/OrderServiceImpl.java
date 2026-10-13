@@ -54,6 +54,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public List<OrderDTO> getAllOrders() {
+        List<Order> orders = orderDao.findAllOrderByPurchaseDateDesc();
+        return labMapper.toOrderDTOList(orders);
+    }
+
+    @Override
     public OrderDTO getOrderByNumber(String username, String orderNumber) {
         User user = getUserOrThrow(username);
         Order order = orderDao.findByOrderNumber(orderNumber)
