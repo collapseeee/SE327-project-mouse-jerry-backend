@@ -255,4 +255,18 @@ class OrderServiceImplTest {
         assertNotNull(result);
         verify(orderDao).save(any(Order.class));
     }
+
+    @Test
+    void testGetAllOrders() {
+        when(orderDao.findAllOrderByPurchaseDateDesc()).thenReturn(List.of(mockOrder));
+        when(labMapper.toOrderDTOList(List.of(mockOrder))).thenReturn(List.of(mockOrderDTO));
+
+        List<OrderDTO> results = orderService.getAllOrders();
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(mockOrderDTO, results.get(0));
+        verify(orderDao).findAllOrderByPurchaseDateDesc();
+        verify(labMapper).toOrderDTOList(List.of(mockOrder));
+    }
 }
