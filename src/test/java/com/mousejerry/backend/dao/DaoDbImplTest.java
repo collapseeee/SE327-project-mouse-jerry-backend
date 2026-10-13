@@ -33,6 +33,9 @@ class DaoDbImplTest {
     @Mock
     private com.mousejerry.backend.repository.GameRepository gameRepository;
 
+    @Mock
+    private com.mousejerry.backend.repository.HighlightRepository highlightRepository;
+
     @InjectMocks
     private UserDaoDbImpl userDao;
 
@@ -44,6 +47,9 @@ class DaoDbImplTest {
 
     @InjectMocks
     private com.mousejerry.backend.dao.impl.GameDaoDbImpl gameDao;
+
+    @InjectMocks
+    private com.mousejerry.backend.dao.impl.HighlightDaoDbImpl highlightDao;
 
     @Test
     void testUserDaoDelegation() {
@@ -224,5 +230,26 @@ class DaoDbImplTest {
 
         jakarta.persistence.criteria.Predicate result = spec.toPredicate(root, null, cb);
         assertNotNull(result);
+    }
+
+    @Test
+    void testHighlightDaoDelegation() {
+        com.mousejerry.backend.entity.Highlight highlight = com.mousejerry.backend.entity.Highlight.builder()
+                .id(1L)
+                .buttonColor("#8b0000")
+                .build();
+
+        when(highlightRepository.findAllWithGame()).thenReturn(List.of(highlight));
+        when(highlightRepository.findById(1L)).thenReturn(Optional.of(highlight));
+        when(highlightRepository.findByGameId("elden-ring")).thenReturn(Optional.of(highlight));
+        when(highlightRepository.save(highlight)).thenReturn(highlight);
+
+        assertEquals(1, highlightDao.findAll().size());
+        assertTrue(highlightDao.findById(1L).isPresent());
+        assertTrue(highlightDao.findByGameId("elden-ring").isPresent());
+        assertSame(highlight, highlightDao.save(highlight));
+
+        highlightDao.delete(highlight);
+        verify(highlightRepository).delete(highlight);
     }
 }
