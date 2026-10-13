@@ -25,4 +25,5 @@ public class GameDTO {
     private String releaseDate;
     private Integer stock;
     private Boolean isHighlight;
+    private SystemRequirementsDTO systemRequirements;
 }

@@ -174,7 +174,7 @@ class UserServiceImplTest {
         assertNotNull(response);
         assertEquals("admin-jwt-token", response.getToken());
         assertEquals(Role.ROLE_ADMIN, response.getRole());
-        assertEquals("/admin/back-game", response.getRedirectUrl());
+        assertEquals("/admin/games", response.getRedirectUrl());
     }
 
     @Test

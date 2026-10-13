@@ -72,4 +72,8 @@ public class Game {
     @OrderBy("displayOrder ASC")
     @Builder.Default
     private List<GameScreenshot> screenshots = new ArrayList<>();
+
+    @ToString.Exclude
+    @OneToOne(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private SystemRequirements systemRequirements;
 }

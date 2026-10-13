@@ -18,6 +18,8 @@ public class OrderDTO {
 
     private Long id;
     private String orderNumber;
+    private Long userId;
+    private String username;
     private BigDecimal totalAmount;
     private LocalDateTime purchaseDate;
 

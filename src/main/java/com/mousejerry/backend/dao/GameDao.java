@@ -16,4 +16,10 @@ public interface GameDao {
     List<Game> findHighlights();
 
     Game save(Game game);
+
+    void delete(Game game);
+
+    void deleteById(String id);
+
+    boolean existsById(String id);
 }

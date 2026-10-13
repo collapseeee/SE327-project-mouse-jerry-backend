@@ -75,27 +75,39 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
    git push -u origin <branch-name>
    ```
 
-### Step 4: Pull Request Handling (No Duplicate PRs)
+### Step 4: Pull Request Handling (Strict Template Compliance)
 1. **If updating an EXISTING open PR**:
    - Pushing the branch in Step 3 **automatically updates the existing PR on GitHub**.
    - **DO NOT run `gh pr create`**.
    - Output the existing PR link confirming new commits were pushed.
 2. **If creating a NEW Pull Request**:
+   - **Strict Adherence to Repository PR Template**: When generating the PR description, **NEVER bypass or alter** the sections defined in `.github/pull_request_template.md`. You MUST fill out every single section thoroughly:
+     - `## Summary`: Explain what changes were made, architectural motivation, and link related issues (e.g., `Closes #123`).
+     - `## Changes`: Comprehensive bulleted list of all changes across entities, DAOs, services, controllers, and tests.
+     - `## How it was tested`: Full breakdown of test suites (`./mvnw clean test`), coverage metrics, and build status.
+     - `## Checklist`: Complete all checklist items from `.github/pull_request_template.md`.
    - Write the formatted markdown description to a temporary file `pr_body.md`:
      ```bash
      cat << 'EOF' > pr_body.md
-     ## 📌 Summary of Changes
-     - Detailed description of backend APIs, entities, or business logic implemented.
+     ## Summary
+     Comprehensive implementation of <feature-name> according to Spring Boot 5-tier architecture standards.
+     Closes #<issue-number>
 
-     ## 🧪 Test Coverage & Metrics
-     - Tests run via `./mvnw clean test`.
-     - All unit and integration test assertions passed.
+     ## Changes
+     - **Entity / DTO / Migration**: Added JPA entity, DTO definitions, and Flyway migration script.
+     - **DAO & Repository Layer**: Added repository interface and DAO implementation with `@Profile("db")`.
+     - **Service & Controller Layer**: Implemented transactional service logic and REST controller endpoints.
+     - **Testing**: Added JUnit 5 and Mockito unit/integration tests with Testcontainers.
 
-     ## ✅ Review Checklist
-     - [ ] Follows strict 5-tier architecture (Controller -> Service -> DAO -> Repository).
-     - [ ] DTOs mapped via MapStruct (never return raw entities).
-     - [ ] Unit & branch tests pass cleanly.
-     - [ ] Ready to merge into `development`.
+     ## How it was tested
+     - **Build & Tests**: `./mvnw clean test` passed with zero failures and zero errors.
+     - **Test Coverage**: Satisfies SonarCloud Statement and Branch coverage threshold (>80%).
+
+     ## Checklist
+     - [x] Branch is up to date with `main`/`development` and the build is green
+     - [x] Tests added or updated for new behavior
+     - [x] SonarCloud quality gate passes
+     - [ ] Reviewed by the other team member
      EOF
      ```
    - Create the Pull Request targeting `development` with the `agent` label using GitHub CLI (`gh`):
@@ -104,26 +116,12 @@ This skill guides the automated end-to-end lifecycle of implementing a feature o
      case "$branch" in
        feature/*) pr_type=feat ;;
        fix/*)     pr_type=fix ;;
-       *)         echo "Expected a feature/* or fix/* branch" >&2; exit 1 ;;
+       *)         pr_type=chore ;;
      esac
      gh pr create --base development --head "$branch" --label "agent" --title "${pr_type}(<scope>): <Title>" --body-file pr_body.md
      rm pr_body.md
      ```
      *(If `gh` CLI is not installed or authenticated, provide the direct GitHub PR URL output by git push)*
-2. The PR description body MUST follow this template:
-   ```markdown
-   ## 📌 Summary of Changes
-   - Detailed description of backend APIs, entities, or business logic implemented.
-
-   ## 🧪 Test Coverage & Metrics
-   - Tests run via `./mvnw clean test`.
-   - All unit and integration test assertions passed.
-
-   ## ✅ Review Checklist
-   - [ ] REST API endpoints follow conventions and validation.
-   - [ ] Unit & branch tests pass.
-   - [ ] Ready to merge into `development`.
-   ```
 
 ### Step 5: Review Gate (STOP)
 - Output the created Pull Request URL clearly to the user.

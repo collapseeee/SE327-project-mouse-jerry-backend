@@ -43,7 +43,37 @@ public class CategoryDaoDbImpl implements CategoryDao {
     }
 
     @Override
+    public boolean existsByName(String name) {
+        return categoryRepository.existsByNameIgnoreCase(name);
+    }
+
+    @Override
+    public boolean existsBySlug(String slug) {
+        return categoryRepository.existsBySlugIgnoreCase(slug);
+    }
+
+    @Override
+    public boolean existsByNameAndIdNot(String name, Long id) {
+        return categoryRepository.existsByNameIgnoreCaseAndIdNot(name, id);
+    }
+
+    @Override
+    public boolean existsBySlugAndIdNot(String slug, Long id) {
+        return categoryRepository.existsBySlugIgnoreCaseAndIdNot(slug, id);
+    }
+
+    @Override
     public Category save(Category category) {
         return categoryRepository.save(category);
+    }
+
+    @Override
+    public void delete(Category category) {
+        categoryRepository.delete(category);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        categoryRepository.deleteById(id);
     }
 }

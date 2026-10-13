@@ -14,7 +14,9 @@ import java.math.BigDecimal;
 public class OrderItemKeyDTO {
 
     private Long id;
+    private String gameId;
     private String gameTitle;
+    private String coverImage;
     private String gameKey;
     private BigDecimal price;
 }
