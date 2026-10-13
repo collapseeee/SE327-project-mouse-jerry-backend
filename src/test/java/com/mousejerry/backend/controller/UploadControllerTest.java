@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -87,7 +86,7 @@ class UploadControllerTest {
                 .publicUrl("https://supabase.co/mouse-jerry/games/test.webp")
                 .build();
 
-        when(storageService.generatePresignedUploadUrl(eq("test.webp"), eq("image/webp")))
+        when(storageService.generatePresignedUploadUrl("test.webp", "image/webp"))
                 .thenReturn(dto);
 
         mockMvc.perform(get("/api/v1/upload/presigned-url")
@@ -101,7 +100,7 @@ class UploadControllerTest {
 
     @Test
     void getPresignedUrl_Invalid_ReturnsBadRequest() throws Exception {
-        when(storageService.generatePresignedUploadUrl(eq("bad.sh"), eq("application/x-sh")))
+        when(storageService.generatePresignedUploadUrl("bad.sh", "application/x-sh"))
                 .thenThrow(new IllegalArgumentException("Unsupported image format: sh"));
 
         mockMvc.perform(get("/api/v1/upload/presigned-url")

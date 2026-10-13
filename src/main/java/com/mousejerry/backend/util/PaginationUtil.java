@@ -18,7 +18,7 @@ public final class PaginationUtil {
 
     public static Pageable createPageable(int page, int size, String sort, String direction, int maxPageSize) {
         int pageNumber = Math.max(page - 1, 0);
-        int pageSize = Math.min(Math.max(size, 1), maxPageSize);
+        int pageSize = Math.clamp(size, 1, maxPageSize);
         Sort.Direction sortDir = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
         return PageRequest.of(pageNumber, pageSize, Sort.by(sortDir, sort));
     }

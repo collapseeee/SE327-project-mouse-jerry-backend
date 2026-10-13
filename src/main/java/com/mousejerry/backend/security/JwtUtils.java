@@ -28,6 +28,7 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
+    @SuppressWarnings("java:S2143") // JJWT JwtBuilder requires java.util.Date for issuedAt and expiration
     public String generateToken(User user) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(jwtExpirationMs);
