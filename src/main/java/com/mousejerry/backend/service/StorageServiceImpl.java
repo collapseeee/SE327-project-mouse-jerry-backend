@@ -15,6 +15,10 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Set;
@@ -37,6 +41,9 @@ public class StorageServiceImpl implements StorageService {
     @Value("${aws.s3.public-base-url:https://djorohnniuxhnrjztdfq.storage.supabase.co/storage/v1/s3/mouse-jerry}")
     private String publicBaseUrl;
 
+    @Value("${file.upload-dir:uploads}")
+    private String localUploadDir = "uploads";
+
     @Override
     public StorageFileDTO uploadImage(MultipartFile file) {
         validateFile(file);
@@ -45,23 +52,56 @@ public class StorageServiceImpl implements StorageService {
         String objectKey = generateObjectKey(file.getOriginalFilename());
 
         try {
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(objectKey)
-                    .contentType(contentType)
-                    .build();
-
-            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-            log.info("Successfully uploaded image to S3: bucket={}, key={}", bucket, objectKey);
+            return uploadToS3(file, objectKey, contentType);
         } catch (IOException e) {
             log.error("Failed to read image bytes for upload: {}", e.getMessage(), e);
             throw new IllegalStateException("Failed to read image file data", e);
+        } catch (Exception s3Ex) {
+            log.warn("S3 upload failed ({}). Falling back to local storage.", s3Ex.getMessage());
+            return saveLocally(file, objectKey);
         }
+    }
+
+    private StorageFileDTO uploadToS3(MultipartFile file, String objectKey, String contentType) throws IOException {
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        log.info("Successfully uploaded image to S3: bucket={}, key={}", bucket, objectKey);
 
         return StorageFileDTO.builder()
                 .name(objectKey)
                 .publicUrl(buildPublicUrl(objectKey))
                 .build();
+    }
+
+    private StorageFileDTO saveLocally(MultipartFile file, String objectKey) {
+        try {
+            String baseDir = (localUploadDir != null && !localUploadDir.isBlank()) ? localUploadDir : "uploads";
+            Path targetDir = Paths.get(baseDir, "games");
+            Files.createDirectories(targetDir);
+
+            String filename = objectKey.startsWith("games/") ? objectKey.substring(6) : objectKey;
+            Path targetFile = targetDir.resolve(filename).normalize();
+            if (!targetFile.startsWith(targetDir.normalize())) {
+                throw new IllegalArgumentException("Invalid file key path");
+            }
+
+            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
+            String publicUrl = "/api/v1/upload/files/" + objectKey;
+            log.info("Successfully saved image locally: path={}, publicUrl={}", targetFile, publicUrl);
+
+            return StorageFileDTO.builder()
+                    .name(objectKey)
+                    .publicUrl(publicUrl)
+                    .build();
+        } catch (IOException ex) {
+            log.error("Failed to store image file locally: {}", ex.getMessage(), ex);
+            throw new IllegalStateException("Failed to store image file data", ex);
+        }
     }
 
     @Override

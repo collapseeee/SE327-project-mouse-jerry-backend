@@ -75,6 +75,7 @@ public class SecurityConfig {
                                 "/api/v1/games/**",
                                 "/api/games/**",
                                 "/api/v1/highlights/**",
+                                "/api/v1/upload/files/**",
                                 "/actuator/**",
                                 "/error"
                         ).permitAll()
