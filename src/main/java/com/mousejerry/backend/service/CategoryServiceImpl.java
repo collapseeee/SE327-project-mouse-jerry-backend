@@ -131,7 +131,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (customSlug != null && !customSlug.trim().isEmpty()) {
             return customSlug.trim();
         }
-        String slug = name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
+        String slug = name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-)|(-$)", "");
         return slug.isEmpty() ? name : slug;
     }
 }

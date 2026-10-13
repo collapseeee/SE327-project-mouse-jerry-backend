@@ -11,5 +11,7 @@ public interface OrderService {
 
     List<OrderDTO> getOrderHistory(String username);
 
+    List<OrderDTO> getAllOrders();
+
     OrderDTO getOrderByNumber(String username, String orderNumber);
 }

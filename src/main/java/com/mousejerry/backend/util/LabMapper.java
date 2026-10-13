@@ -3,12 +3,14 @@ package com.mousejerry.backend.util;
 import com.mousejerry.backend.dto.CartItemDTO;
 import com.mousejerry.backend.dto.CategoryDTO;
 import com.mousejerry.backend.dto.GameDTO;
+import com.mousejerry.backend.dto.HighlightDTO;
 import com.mousejerry.backend.dto.OrderDTO;
 import com.mousejerry.backend.dto.OrderItemKeyDTO;
 import com.mousejerry.backend.dto.UserProfileDTO;
 import com.mousejerry.backend.entity.CartItem;
 import com.mousejerry.backend.entity.Category;
 import com.mousejerry.backend.entity.Game;
+import com.mousejerry.backend.entity.Highlight;
 import com.mousejerry.backend.entity.Order;
 import com.mousejerry.backend.entity.OrderItemKey;
 import com.mousejerry.backend.entity.User;
@@ -56,6 +58,12 @@ public interface LabMapper {
     CartItemDTO toCartItemDTO(CartItem cartItem);
 
     List<CartItemDTO> toCartItemDTOList(List<CartItem> cartItems);
+
+    @Mapping(target = "gameId", expression = "java(highlight.getGame() != null ? highlight.getGame().getId() : null)")
+    @Mapping(target = "gameName", expression = "java(highlight.getGame() != null ? highlight.getGame().getName() : null)")
+    HighlightDTO toHighlightDTO(Highlight highlight);
+
+    List<HighlightDTO> toHighlightDTOList(List<Highlight> highlights);
 
     default BigDecimal calculateItemTotalPrice(CartItem cartItem) {
         if (cartItem == null || cartItem.getGame() == null || cartItem.getGame().getPrice() == null) {

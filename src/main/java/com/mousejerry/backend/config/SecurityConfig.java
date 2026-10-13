@@ -62,18 +62,31 @@ public class SecurityConfig {
             http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
-                        (request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
+                        (request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                        }
                 ))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/categories",
                                 "/api/v1/categories/**",
+                                "/api/categories",
                                 "/api/categories/**",
+                                "/api/v1/games",
                                 "/api/v1/games/**",
+                                "/api/games",
                                 "/api/games/**",
+                                "/api/v1/highlights",
+                                "/api/v1/highlights/**",
+                                "/api/v1/upload/files/**",
                                 "/actuator/**",
                                 "/error"
                         ).permitAll()
