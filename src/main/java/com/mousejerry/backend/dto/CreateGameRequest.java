@@ -50,4 +50,6 @@ public class CreateGameRequest {
     private List<String> categories;
 
     private List<String> screenshots;
+
+    private SystemRequirementsDTO systemRequirements;
 }

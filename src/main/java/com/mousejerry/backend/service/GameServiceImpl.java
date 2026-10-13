@@ -3,10 +3,12 @@ package com.mousejerry.backend.service;
 import com.mousejerry.backend.dao.CategoryDao;
 import com.mousejerry.backend.dao.GameDao;
 import com.mousejerry.backend.dto.CreateGameRequest;
+import com.mousejerry.backend.dto.SystemRequirementsDTO;
 import com.mousejerry.backend.dto.UpdateGameRequest;
 import com.mousejerry.backend.entity.Category;
 import com.mousejerry.backend.entity.Game;
 import com.mousejerry.backend.entity.GameScreenshot;
+import com.mousejerry.backend.entity.SystemRequirements;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -70,6 +72,7 @@ public class GameServiceImpl implements GameService {
                 .build();
 
         syncScreenshots(game, request.getScreenshots());
+        syncSystemRequirements(game, request.getSystemRequirements());
         return gameDao.save(game);
     }
 
@@ -99,6 +102,7 @@ public class GameServiceImpl implements GameService {
         game.setCategories(categories);
 
         syncScreenshots(game, request.getScreenshots());
+        syncSystemRequirements(game, request.getSystemRequirements());
         return gameDao.save(game);
     }
 
@@ -228,5 +232,24 @@ public class GameServiceImpl implements GameService {
                 game.getScreenshots().add(screenshot);
             }
         }
+    }
+
+    private void syncSystemRequirements(Game game, SystemRequirementsDTO dto) {
+        if (dto == null) {
+            game.setSystemRequirements(null);
+            return;
+        }
+        SystemRequirements req = game.getSystemRequirements();
+        if (req == null) {
+            req = SystemRequirements.builder()
+                    .game(game)
+                    .build();
+            game.setSystemRequirements(req);
+        }
+        req.setOs(dto.getOs());
+        req.setProcessor(dto.getProcessor());
+        req.setMemory(dto.getMemory());
+        req.setGraphics(dto.getGraphics());
+        req.setStorage(dto.getStorage());
     }
 }
