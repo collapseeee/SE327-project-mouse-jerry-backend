@@ -20,10 +20,10 @@ public class S3Config {
     @Value("${aws.s3.endpoint:https://djorohnniuxhnrjztdfq.storage.supabase.co/storage/v1/s3}")
     private String endpoint;
 
-    @Value("${aws.s3.access-key:5b324d70b9097e0b88d52e1a0c994aeb}")
+    @Value("${aws.s3.access-key:}")
     private String accessKey;
 
-    @Value("${aws.s3.secret-key:249bb979e812ea4ef4883ddb1b08d60212d487ae5947ebced6c96dd94e544592}")
+    @Value("${aws.s3.secret-key:}")
     private String secretKey;
 
     @Value("${aws.s3.region:ap-northeast-2}")
