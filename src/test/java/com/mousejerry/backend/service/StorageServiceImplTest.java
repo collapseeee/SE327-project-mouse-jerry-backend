@@ -183,4 +183,155 @@ class StorageServiceImplTest {
                 () -> storageService.generatePresignedUploadUrl("script.sh", "text/plain"));
         assertTrue(ex.getMessage().contains("Unsupported image format: sh"));
     }
+
+    @Test
+    void uploadImage_NormalizesS3ProtocolToPublicCdnUrl() {
+        ReflectionTestUtils.setField(storageService, "publicBaseUrl",
+                "https://djorohnniuxhnrjztdfq.storage.supabase.co/storage/v1/s3/mouse-jerry/");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "cover.png",
+                "image/png",
+                "test-data".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getPublicUrl().startsWith("https://djorohnniuxhnrjztdfq.supabase.co/storage/v1/object/public/mouse-jerry/games/"));
+        assertFalse(result.getPublicUrl().contains(".storage.supabase.co/storage/v1/s3"));
+    }
+
+    @Test
+    void uploadImage_BlankPublicBaseUrl_ReturnsRelativePath() {
+        ReflectionTestUtils.setField(storageService, "publicBaseUrl", "   ");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "photo.jpg",
+                "image/jpeg",
+                "test-data".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getPublicUrl().startsWith("/games/"));
+    }
+
+    @Test
+    void uploadImage_NullPublicBaseUrl_ReturnsRelativePath() {
+        ReflectionTestUtils.setField(storageService, "publicBaseUrl", null);
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "null-base.png",
+                "image/png",
+                "test-data".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getPublicUrl().startsWith("/games/"));
+    }
+
+    @Test
+    void uploadImage_NonImageContentTypePng_ResolvesCorrectContentType() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "game.png",
+                "application/octet-stream",
+                "dummy content".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getName().endsWith("game.png"));
+    }
+
+    @Test
+    void uploadImage_JpegExtension_ResolvesJpegContentType() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "game.jpeg",
+                "application/octet-stream",
+                "dummy content".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getName().endsWith("game.jpeg"));
+    }
+
+    @Test
+    void uploadImage_FallbackWithNullLocalUploadDir_UsesDefaultUploads() {
+        ReflectionTestUtils.setField(storageService, "localUploadDir", null);
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "local-test.png",
+                "image/png",
+                "content".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.AccessDeniedException.builder().message("Access Denied").build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getPublicUrl().startsWith("/api/v1/upload/files/games/"));
+    }
+
+    @Test
+    void uploadImage_FallbackWithBlankLocalUploadDir_UsesDefaultUploads() {
+        ReflectionTestUtils.setField(storageService, "localUploadDir", "   ");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "local-test2.png",
+                "image/png",
+                "content".getBytes()
+        );
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.AccessDeniedException.builder().message("Access Denied").build());
+
+        StorageFileDTO result = storageService.uploadImage(file);
+
+        assertNotNull(result);
+        assertTrue(result.getPublicUrl().startsWith("/api/v1/upload/files/games/"));
+    }
+
+    @Test
+    void uploadImage_NullOriginalFilename_ThrowsException() {
+        MockMultipartFile file = new MockMultipartFile("file", null, "image/png", "abc".getBytes());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> storageService.uploadImage(file));
+        assertTrue(ex.getMessage().contains("Must contain a valid image extension"));
+    }
+
+    @Test
+    void generatePresignedUploadUrl_NullFilename_ThrowsException() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> storageService.generatePresignedUploadUrl(null, "image/png"));
+        assertEquals("Filename cannot be empty", ex.getMessage());
+    }
 }
