@@ -38,7 +38,7 @@ public class StorageServiceImpl implements StorageService {
     @Value("${aws.s3.bucket:mouse-jerry}")
     private String bucket;
 
-    @Value("${aws.s3.public-base-url:https://djorohnniuxhnrjztdfq.storage.supabase.co/storage/v1/s3/mouse-jerry}")
+    @Value("${aws.s3.public-base-url:https://djorohnniuxhnrjztdfq.supabase.co/storage/v1/object/public/mouse-jerry}")
     private String publicBaseUrl;
 
     @Value("${file.upload-dir:uploads}")
@@ -175,6 +175,9 @@ public class StorageServiceImpl implements StorageService {
         String base = publicBaseUrl.stripTrailing();
         while (base.endsWith("/")) {
             base = base.substring(0, base.length() - 1);
+        }
+        if (base.contains(".storage.supabase.co/storage/v1/s3")) {
+            base = base.replace(".storage.supabase.co/storage/v1/s3", ".supabase.co/storage/v1/object/public");
         }
         return base + "/" + key;
     }
