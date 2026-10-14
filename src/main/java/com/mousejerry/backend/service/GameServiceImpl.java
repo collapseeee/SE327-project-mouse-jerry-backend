@@ -164,9 +164,16 @@ public class GameServiceImpl implements GameService {
             return "game-" + UUID.randomUUID().toString().substring(0, 8);
         }
         String slug = input.trim().toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("^-+", "")
-                .replaceAll("-+$", "");
+                .replaceAll("[^a-z0-9]+", "-");
+        int start = 0;
+        while (start < slug.length() && slug.charAt(start) == '-') {
+            start++;
+        }
+        int end = slug.length();
+        while (end > start && slug.charAt(end - 1) == '-') {
+            end--;
+        }
+        slug = slug.substring(start, end);
         return slug.isEmpty() ? "game-" + UUID.randomUUID().toString().substring(0, 8) : slug;
     }
 

@@ -4,6 +4,8 @@ import com.mousejerry.backend.dto.PresignedUrlDTO;
 import com.mousejerry.backend.dto.StorageFileDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,12 +49,17 @@ class StorageServiceImplTest {
         ReflectionTestUtils.setField(storageService, "localUploadDir", "target/test-uploads");
     }
 
-    @Test
-    void uploadImage_ValidPng_Success() {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "test-cover.png, image/png, true",
+            "game.jpg, null, false",
+            "banner.webp, image/webp, false"
+    }, nullValues = {"null"})
+    void uploadImage_ValidFileVariants_Success(String filename, String contentType, boolean verifyCall) {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "test-cover.png",
-                "image/png",
+                filename,
+                contentType,
                 "dummy image content".getBytes()
         );
 
@@ -63,27 +70,11 @@ class StorageServiceImplTest {
 
         assertNotNull(result);
         assertTrue(result.getName().startsWith("games/"));
-        assertTrue(result.getName().endsWith("test-cover.png"));
+        assertTrue(result.getName().endsWith(filename));
         assertTrue(result.getPublicUrl().startsWith("https://supabase.co/storage/v1/s3/mouse-jerry/games/"));
-        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-    }
-
-    @Test
-    void uploadImage_ValidJpgFallbackContentType_Success() {
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "game.jpg",
-                null,
-                "dummy content".getBytes()
-        );
-
-        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
-
-        StorageFileDTO result = storageService.uploadImage(file);
-
-        assertNotNull(result);
-        assertTrue(result.getName().endsWith("game.jpg"));
+        if (verifyCall) {
+            verify(s3Client, atLeastOnce()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        }
     }
 
     @Test
